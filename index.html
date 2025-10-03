@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stereo Calibration</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; color: #58a6ff; }
+        .panel { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+        select { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 10px; border-radius: 6px; width: 100%; max-width: 300px; margin: 5px; }
+        button { padding: 12px 24px; font-size: 15px; cursor: pointer; border: none; border-radius: 6px; margin: 5px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: #238636; color: white; }
+        .btn-danger { background: #da3633; color: white; }
+        #video-feed { width: 100%; border-radius: 6px; }
+        .status { background: #21262d; padding: 15px; border-radius: 6px; font-family: monospace; }
+        .progress { width: 100%; height: 30px; background: #21262d; border-radius: 6px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #238636, #2ea043); transition: width 0.3s; text-align: center; color: white; line-height: 30px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stereo Camera Calibration</h1>
+        
+        <div class="panel">
+            <h3>Select Camera Pair</h3>
+            <div class="grid">
+                <div>
+                    <label>Camera 1:</label>
+                    <select id="cam1-select"></select>
+                </div>
+                <div>
+                    <label>Camera 2:</label>
+                    <select id="cam2-select"></select>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <button id="btn-start" class="btn-primary">Start Stereo</button>
+            <button id="btn-stop" class="btn-danger" disabled>Stop</button>
+            <button id="btn-calib" class="btn-primary" disabled>Start Calibration</button>
+            <button id="btn-compute" class="btn-primary" disabled>Compute</button>
+            <button id="btn-save" class="btn-primary" disabled>Save</button>
+        </div>
+        
+        <div class="panel">
+            <img id="video-feed" src="/video_feed" alt="Stereo Feed">
+        </div>
+        
+        <div class="panel">
+            <div class="status" id="status">Status: Ready</div>
+        </div>
+        
+        <div class="panel">
+            <div class="progress">
+                <div class="progress-bar" id="progress" style="width: 0%">0 / 0</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const socket = io();
+        letmaxFrames = 200;
+        
+        // Load cameras
+        fetch('/api/cameras')
+            .then(r => r.json())
+            .then(cameras => {
+                const html = cameras.map(c => 
+                    `<option value="${c.id}">Cam ${c.id} - ${c.device}</option>`
+                ).join('');
+                document.getElementById('cam1-select').innerHTML = html;
+                document.getElementById('cam2-select').innerHTML = html;
+                
+                // Pre-select different cameras
+                if (cameras.length >= 2) {
+                    document.getElementById('cam2-select').selectedIndex = 1;
+                }
+            });
+        
+        // Load config
+        fetch('/api/config')
+            .then(r => r.json())
+            .then(cfg => {
+                maxFrames = cfg.max_frames;
+            });
+        
+        // Buttons
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const btnCalib = document.getElementById('btn-calib');
+        const btnCompute = document.getElementById('btn-compute');
+        const btnSave = document.getElementById('btn-save');
+        const status = document.getElementById('status');
+        const progress = document.getElementById('progress');
+        
+        btnStart.onclick = () => {
+            const cam1 = document.getElementById('cam1-select').value;
+            const cam2 = document.getElementById('cam2-select').value;
+            
+            if (cam1 === cam2) {
+                alert('Please select two different cameras');
+                return;
+            }
+            
+            socket.emit('start_stereo', {camera1_id: cam1, camera2_id: cam2});
+        };
+        
+        btnStop.onclick = () => socket.emit('stop_stereo');
+        btnCalib.onclick = () => socket.emit('start_calibration');
+        btnCompute.onclick = () => socket.emit('run_calibration');
+        btnSave.onclick = () => socket.emit('save_results', {});
+        
+        // Socket events
+        socket.on('stereo_started', (data) => {
+            if (data.success) {
+                status.textContent = 'Stereo cameras started';
+                btnStart.disabled = true;
+                btnStop.disabled = false;
+                btnCalib.disabled = false;
+            } else {
+                status.textContent = 'Error: ' + data.error;
+                alert(data.error);
+            }
+        });
+        
+        socket.on('stereo_stopped', () => {
+            status.textContent = 'Cameras stopped';
+            btnStart.disabled = false;
+            btnStop.disabled = true;
+            btnCalib.disabled = true;
+            btnCompute.disabled = true;
+            btnSave.disabled = true;
+            progress.style.width = '0%';
+            progress.textContent = '0 / 0';
+        });
+        
+        socket.on('calibration_started', () => {
+            status.textContent = 'Calibration in progress...';
+            btnCalib.disabled = true;
+            btnCompute.disabled = false;
+            progress.textContent = `0 / ${maxFrames}`;
+        });
+        
+        socket.on('calibration_complete', (data) => {
+            status.textContent = 
+                `Stereo calibration complete! Error: ${data.error.toFixed(4)} px, Frames: ${data.frames}`;
+            btnCompute.disabled = true;
+            btnSave.disabled = false;
+            progress.style.width = '100%';
+            progress.textContent = `${data.frames} / ${maxFrames}`;
+        });
+        
+        socket.on('calibration_failed', (data) => {
+            status.textContent = 'Calibration failed: ' + data.error;
+            alert(data.error);
+        });
+        
+        socket.on('results_saved', (data) => {
+            status.textContent = 'Results saved to ' + data.path;
+            alert('Saved: ' + data.path);
+        });
+    </script>
+</body>
+</html>

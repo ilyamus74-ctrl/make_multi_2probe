@@ -1,0 +1,116 @@
+{
+  "calib_board_cols": 16,
+  "calib_board_rows": 8,
+  "calib_delete_videos": true,
+  "calib_enable_multithreading": false,
+  "calib_max_frames": 200,
+  "calib_min_frames": 100,
+  "calib_quality_threshold": 50.0,
+  "calib_square_size": 22.0,
+  "calib_stereo_pose_max_center_diff": 0.05000000074505806,
+  "calib_stereo_pose_max_center_diff_horizontal": 0.20000000298023224,
+  "calib_stereo_pose_max_center_diff_vertical": 0.20000000298023224,
+  "calib_stereo_pose_max_normalized_span_ratio": 0.4999999701976776,
+  "calib_stereo_pose_max_scale_diff": 0.4999999701976776,
+  "calib_stereo_pose_max_tilt_diff": 0.0,
+  "calib_time_tolerance_ms": 50,
+  "cameras": [
+    {
+      "buffer_type": "auto",
+      "buffers": 3,
+      "cap_fps": 30,
+      "det_args": [],
+      "det_port": 8001,
+      "device": "",
+      "http_fps_limit": 20,
+      "id": "",
+      "jpeg_quality": 60,
+      "labels_path": "model/coco_80_labels_list.txt",
+      "log_file": "",
+      "model_path": "model_rknn/yolov8.rknn",
+      "npu_core": "auto",
+      "role": "wide_angle_primary",
+      "show_fps": false
+    },
+    {
+      "auto_profiles": true,
+      "buffer_type": "single",
+      "buffers": 3,
+      "cap_fps": 30,
+      "det_args": [],
+      "det_port": 8001,
+      "device": "/dev/video1",
+      "http_fps_limit": 20,
+      "id": "3",
+      "jpeg_quality": 60,
+      "labels_path": "model/coco_80_labels_list.txt",
+      "log_file": "",
+      "match": {
+        "by_id_contains": "usb-SHENZHEN_AONI_ELECTRONIC_CO.__LTD_Full_HD_webcam_AN202011030002-video-index0"
+      },
+      "mode": "calibration",
+      "model_path": "model_rknn/yolov8n_800x800_9out_fp32.rknn",
+      "npu_core": "auto",
+      "npu_worker": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "preferred": {
+        "fps": 30,
+        "h": 600,
+        "pixfmt": "MJPG",
+        "w": 800
+      },
+      "profile": "auto",
+      "role": "zoom",
+      "show_fps": true
+    },
+    {
+      "auto_profiles": true,
+      "buffer_type": "single",
+      "buffers": 3,
+      "cap_fps": 30,
+      "det_args": [],
+      "det_port": 8003,
+      "device": "/dev/video3",
+      "http_fps_limit": 20,
+      "id": "9",
+      "jpeg_quality": 60,
+      "labels_path": "model/coco_80_labels_list.txt",
+      "log_file": "",
+      "match": {
+        "by_id_contains": "usb-Generic_HD_video_20210901000000-video-index0"
+      },
+      "mode": "calibration",
+      "model_path": "model_rknn/yolov8.rknn",
+      "npu_core": "auto",
+      "npu_worker": 0,
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "preferred": {
+        "fps": 30,
+        "h": 600,
+        "pixfmt": "MJPG",
+        "w": 800
+      },
+      "profile": "auto",
+      "role": "zoom",
+      "show_fps": true
+    }
+  ],
+  "manager_debug_enabled": true,
+  "scheme_type": "hemisphere_single",
+  "tracking_config": {
+    "coordinate_system": "world",
+    "id_retention_seconds": 2.5,
+    "max_area_ratio_change": 0.7,
+    "max_distance_threshold": 2.5,
+    "max_object_speed_mps": 5.0
+  },
+  "use_grayscale_tracking": true
+}
